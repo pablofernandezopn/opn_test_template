@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.isyfu.opnTestGuardiaCivil</string>
+	</array>
+
+	<!-- ================================ -->
+	<!-- UNIVERSAL LINKS - Associated Domains -->
+	<!-- ================================ -->
+	<!-- Permite abrir la app con URLs web como: https://oposicionesguardiacivil.online/home -->
+	<!-- IMPORTANTE: Requiere archivo apple-app-site-association en: -->
+	<!-- https://oposicionesguardiacivil.online/.well-known/apple-app-site-association -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:oposicionesguardiacivil.online</string>
+	</array>
+</dict>
+</plist>
+

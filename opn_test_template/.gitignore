@@ -1,0 +1,82 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# FVM Version Cache
+.fvm/
+
+# ════════════════════════════════════════════════════════════════
+# ARCHIVOS SENSIBLES DE FLAVORS
+# ════════════════════════════════════════════════════════════════
+# ⚠️ IMPORTANTE: Estos archivos contienen credenciales y claves privadas
+# NO deben ser commiteados a git bajo ninguna circunstancia
+
+# Keystores de Android (uno por flavor)
+flavors/*/android/upload-keystore.jks
+flavors/*/android/*.keystore
+flavors/*/android/*.jks
+
+# Archivos de propiedades con credenciales
+flavors/*/android/key.properties
+
+# Archivos de backup de credenciales
+flavors/*/android/keystore_credentials_BACKUP.txt
+flavors/*/android/*_BACKUP.txt
+
+# Archivos .env por flavor (pueden contener secrets)
+flavors/*/.env.*
+
+# Configuraciones de Firebase por flavor
+flavors/*/android/google-services.json
+flavors/*/ios/GoogleService-Info.plist
+
+# Archivos de configuración de iOS
+flavors/*/ios/*.mobileprovision
+flavors/*/ios/*.p12
+flavors/*/ios/*.cer
+
+# Archivos de configuración sensibles
+flavors/*/config.local.json
+flavors/*/*.local.*

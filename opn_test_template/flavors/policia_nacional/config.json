@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "OPN Test Policía Nacional",
+    "organizationName": "Oposiciones Policía Nacional",
+    "domain": "oposicionespolicianacional.com",
+    "website": "www.oposicionespolicianacional.com",
+    "supportEmail": "hola@oposicionespolicianacional.com",
+    "termsUrl": "https://oposicionespolicianacional.com/aviso-legal/",
+    "privacyUrl": "https://oposicionespolicianacional.com/politica-privacidad/"
+  },
+  "identifiers": {
+    "packageName": "com.oposicionespolicianacional.app",
+    "bundleId": "com.oposicionespolicianacional.app"
+  },
+  "deepLinks": {
+    "scheme": "opnpn",
+    "domain": "oposicionespolicianacional.com"
+  },
+  "branding": {
+    "logoPath": "flavors/policia_nacional/assets/images/logo.png",
+    "colors": {
+      "primary": "#042771",
+      "primaryLight": "#A8D1FD",
+      "primaryDark": "#021B4D",
+      "primaryContainer": "#DEECFC",
+      "secondary": "#FFD15C",
+      "secondaryContainer": "#FFF8E7",
+      "accent": "#FFD15C",
+      "tertiaryContainer": "#FFF8E7",
+      "background": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "error": "#FF4949",
+      "success": "#168F4F",
+      "warning": "#FFD15C"
+    }
+  },
+  "services": {
+    "supabase": {
+      "url": "https://toraglnkbwgufwmyauvp.supabase.co",
+      "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvcmFnbG5rYndndWZ3bXlhdXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjY3MDc0MzEsImV4cCI6MTk4MjI4MzQzMX0._CHEagqw4yN0RCUd5grlZ5I5dO6rRjDMcM_eskznrGM"
+    },
+    "firebase": {
+      "projectId": "opn-policia-nacional",
+      "appIdAndroid": "1:123456789:android:abc123",
+      "appIdIos": "1:123456789:ios:abc123"
+    },
+    "revenueCat": {
+      "apiKeyAndroid": "rc_android_key_policia_nacional",
+      "apiKeyIos": "rc_ios_key_policia_nacional"
+    }
+  },
+  "texts": {
+    "disclaimer": "Descargo de responsabilidad: Esta aplicación es una herramienta de estudio independiente y no representa a ninguna entidad gubernamental ni está afiliada con el Cuerpo Nacional de Policía. Toda la información y el temario proporcionados se basan en fuentes públicas oficiales, como el Boletín Oficial del Estado (BOE) y las convocatorias oficiales del Ministerio del Interior.",
+    "welcomeSubtitle": "Consigue tu apto para la Policía Nacional",
+    "signInInfo": "Tus datos de acceso son los mismos que en www.oposicionespolicianacional.com"
+  }
+}

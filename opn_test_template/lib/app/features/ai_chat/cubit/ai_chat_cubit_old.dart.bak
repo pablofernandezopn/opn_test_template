@@ -1,0 +1,285 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../model/chat_message_model.dart';
+import '../model/message_model.dart';
+import '../repository/conversation_repository.dart';
+import 'ai_chat_state.dart';
+
+/// Cubit para manejar el estado del chat con IA
+class AiChatCubit extends Cubit<AiChatState> {
+  final ConversationRepository _conversationRepository;
+  final int _userId;
+
+  AiChatCubit({
+    required ConversationRepository conversationRepository,
+    required int userId,
+    String? initialContext,
+    int? conversationId,
+  })  : _conversationRepository = conversationRepository,
+        _userId = userId,
+        super(AiChatState(conversationId: conversationId)) {
+    _initialize(initialContext, conversationId);
+  }
+
+  /// Inicializa el chat
+  Future<void> _initialize(String? initialContext, int? conversationId) async {
+    if (conversationId != null) {
+      // Cargar conversación existente
+      await _loadExistingConversation(conversationId);
+    } else {
+      // Crear nueva conversación
+      await _createNewConversation(initialContext);
+    }
+  }
+
+  /// Crea una nueva conversación
+  Future<void> _createNewConversation(String? initialContext) async {
+    try {
+      final conversation = await _conversationRepository.createConversation(
+        userId: _userId,
+        title: initialContext != null ? 'Pregunta sobre: ${initialContext.substring(0, 50)}...' : null,
+      );
+
+      emit(state.copyWith(conversationId: conversation.id));
+
+      // Si hay contexto inicial, agregar mensaje de bienvenida
+      if (initialContext != null && initialContext.isNotEmpty) {
+        final welcomeMessage = ChatMessageX.assistant(
+          'Hola, soy tu asistente de IA. Estoy aquí para ayudarte con esta pregunta:\n\n$initialContext\n\n¿En qué puedo ayudarte?',
+        );
+        emit(state.copyWith(messages: [welcomeMessage]));
+
+        // Guardar mensaje de bienvenida en la BD
+        await _conversationRepository.createMessage(
+          conversationId: conversation.id,
+          role: MessageRoleDb.assistant,
+          content: welcomeMessage.content,
+        );
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        hasError: true,
+        errorMessage: 'Error al crear la conversación',
+      ));
+    }
+  }
+
+  /// Carga una conversación existente
+  Future<void> _loadExistingConversation(int conversationId) async {
+    try {
+      final messages = await _conversationRepository.getConversationMessages(conversationId);
+
+      final chatMessages = messages.map((msg) {
+        return ChatMessage(
+          id: msg.id.toString(),
+          content: msg.content,
+          role: _convertDbRoleToMessageRole(msg.role),
+          timestamp: msg.createdAt,
+        );
+      }).toList();
+
+      emit(state.copyWith(messages: chatMessages));
+    } catch (e) {
+      emit(state.copyWith(
+        hasError: true,
+        errorMessage: 'Error al cargar la conversación',
+      ));
+    }
+  }
+
+  /// Convierte MessageRoleDb a MessageRole
+  MessageRole _convertDbRoleToMessageRole(MessageRoleDb dbRole) {
+    switch (dbRole) {
+      case MessageRoleDb.user:
+        return MessageRole.user;
+      case MessageRoleDb.assistant:
+        return MessageRole.assistant;
+      case MessageRoleDb.system:
+        return MessageRole.system;
+      case MessageRoleDb.function:
+        return MessageRole.system; // Mapear function a system
+    }
+  }
+
+  /// Convierte MessageRole a MessageRoleDb
+  MessageRoleDb _convertMessageRoleToDbRole(MessageRole role) {
+    switch (role) {
+      case MessageRole.user:
+        return MessageRoleDb.user;
+      case MessageRole.assistant:
+        return MessageRoleDb.assistant;
+      case MessageRole.system:
+        return MessageRoleDb.system;
+    }
+  }
+
+  /// Envía un mensaje del usuario
+  Future<void> sendMessage(String content) async {
+    if (content.trim().isEmpty) return;
+    if (state.conversationId == null) {
+      emit(state.copyWith(
+        hasError: true,
+        errorMessage: 'No hay una conversación activa',
+      ));
+      return;
+    }
+
+    // Agregar mensaje del usuario
+    final userMessage = ChatMessageX.user(content);
+    emit(state.copyWith(
+      messages: [...state.messages, userMessage],
+      isLoading: true,
+    ));
+
+    try {
+      // Guardar mensaje del usuario en la BD
+      await _conversationRepository.createMessage(
+        conversationId: state.conversationId!,
+        role: MessageRoleDb.user,
+        content: content,
+      );
+
+      // Simular delay de la API
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // Aquí iría la llamada real a la API de IA
+      // Por ahora, simulamos una respuesta
+      final aiResponse = _generateMockResponse(content);
+      final assistantMessage = ChatMessageX.assistant(aiResponse);
+
+      // Guardar respuesta del asistente en la BD
+      await _conversationRepository.createMessage(
+        conversationId: state.conversationId!,
+        role: MessageRoleDb.assistant,
+        content: aiResponse,
+      );
+
+      emit(state.copyWith(
+        messages: [...state.messages, assistantMessage],
+        isLoading: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        hasError: true,
+        errorMessage: 'Error al procesar tu mensaje. Inténtalo de nuevo.',
+      ));
+    }
+  }
+
+  /// Genera una respuesta simulada (temporal hasta integrar IA real)
+  String _generateMockResponse(String userMessage) {
+    final lowerMessage = userMessage.toLowerCase();
+
+    // Saludos
+    if (lowerMessage.contains('hola') ||
+        lowerMessage.contains('buenas') ||
+        lowerMessage.contains('hey')) {
+      return '¡Hola! 👋 Estoy aquí para ayudarte a entender mejor esta pregunta y prepararte para tu examen. ¿Qué te gustaría saber?';
+    }
+
+    // Explicaciones
+    if (lowerMessage.contains('explicar') ||
+        lowerMessage.contains('explica') ||
+        lowerMessage.contains('qué significa') ||
+        lowerMessage.contains('que significa') ||
+        lowerMessage.contains('no entiendo')) {
+      return '📚 Te explico:\n\nEsta pregunta evalúa un concepto fundamental del temario. Para comprenderla mejor:\n\n1. **Contexto**: Identifica el área temática específica\n2. **Conceptos clave**: Fíjate en las palabras importantes del enunciado\n3. **Razonamiento**: Cada opción tiene una razón de ser correcta o incorrecta\n\n💡 **Tip**: Intenta relacionar la pregunta con situaciones prácticas del cuerpo. Esto te ayudará a recordar mejor.\n\n¿Hay algún término específico que no entiendas?';
+    }
+
+    // Ayuda general
+    if (lowerMessage.contains('ayuda') || lowerMessage.contains('ayúdame')) {
+      return '🤝 Estoy aquí para ayudarte. Puedo:\n\n• 📖 Explicarte conceptos y términos legales\n• 💭 Ayudarte a razonar entre las opciones\n• 🎯 Darte técnicas de memorización\n• 📝 Sugerirte recursos complementarios\n• 🔍 Aclarar dudas sobre procedimientos\n\n¿Con qué aspecto específico necesitas ayuda?';
+    }
+
+    // Opciones y razonamiento
+    if (lowerMessage.contains('opción') ||
+        lowerMessage.contains('respuesta') ||
+        lowerMessage.contains('correcta')) {
+      return '🎯 Sobre las opciones:\n\nNo puedo decirte directamente cuál es la correcta (eso eliminaría el propósito del test), pero sí puedo ayudarte a:\n\n• Analizar cada opción sistemáticamente\n• Identificar palabras clave que puedan darte pistas\n• Descartar opciones claramente incorrectas\n• Aplicar técnicas de razonamiento lógico\n\n¿Quieres que analicemos las opciones juntos? Dime cuál te genera más dudas.';
+    }
+
+    // Técnicas de estudio
+    if (lowerMessage.contains('memorizar') ||
+        lowerMessage.contains('recordar') ||
+        lowerMessage.contains('técnica') ||
+        lowerMessage.contains('trucos')) {
+      return '🧠 Técnicas para memorizar:\n\n**1. Mnemotecnia**: Crea acrónimos o frases con las iniciales\n**2. Visualización**: Asocia conceptos con imágenes mentales\n**3. Repetición espaciada**: Repasa en intervalos crecientes\n**4. Contextualización**: Relaciona con casos prácticos reales\n**5. Mapas mentales**: Organiza la información visualmente\n\n💡 Para esta pregunta específica, te recomendaría usar la técnica de contextualización: imagina una situación real donde aplicarías este conocimiento.\n\n¿Te gustaría que profundice en alguna técnica?';
+    }
+
+    // Leyes y normativa
+    if (lowerMessage.contains('ley') ||
+        lowerMessage.contains('artículo') ||
+        lowerMessage.contains('articulo') ||
+        lowerMessage.contains('código') ||
+        lowerMessage.contains('normativa')) {
+      return '⚖️ Sobre normativa legal:\n\nLas preguntas de normativa pueden parecer complicadas, pero hay una estrategia:\n\n1. **Identifica la norma**: ¿Qué ley o código aplica?\n2. **Contexto temporal**: ¿Es normativa vigente o histórica?\n3. **Jerarquía normativa**: Constitución > Ley Orgánica > Ley Ordinaria > Reglamento\n4. **Palabras exactas**: En derecho, la precisión importa\n\n📌 **Consejo**: Si dudas entre dos opciones normativas, la más específica suele ser correcta.\n\n¿Necesitas ayuda con algún aspecto concreto de la normativa?';
+    }
+
+    // Procedimientos
+    if (lowerMessage.contains('procedimiento') ||
+        lowerMessage.contains('paso') ||
+        lowerMessage.contains('orden') ||
+        lowerMessage.contains('secuencia')) {
+      return '🔄 Sobre procedimientos:\n\nLos procedimientos siguen siempre una lógica:\n\n1. **Inicio**: ¿Qué desencadena el procedimiento?\n2. **Competencia**: ¿Quién tiene autoridad?\n3. **Fases**: ¿Qué pasos son obligatorios?\n4. **Plazos**: ¿Hay límites temporales?\n5. **Resolución**: ¿Cómo termina?\n\n💡 **Tip mental**: Imagínate ejecutando el procedimiento paso a paso, como si fueras el agente encargado.\n\n¿Hay algún paso del procedimiento que te confunda?';
+    }
+
+    // Delitos y faltas
+    if (lowerMessage.contains('delito') ||
+        lowerMessage.contains('falta') ||
+        lowerMessage.contains('sanción') ||
+        lowerMessage.contains('pena')) {
+      return '⚠️ Sobre delitos y sanciones:\n\nPara diferenciar conceptos penales:\n\n**Elementos clave:**\n• **Tipicidad**: ¿Está descrito en el código penal?\n• **Antijuridicidad**: ¿Es contrario a derecho?\n• **Culpabilidad**: ¿Hay intención o negligencia?\n• **Penalidad**: ¿Qué tipo de sanción corresponde?\n\n📖 **Clasificación**:\n- Delitos graves: pena > 5 años\n- Delitos menos graves: pena 3 meses - 5 años  \n- Delitos leves: pena < 3 meses\n\n¿Necesitas que profundice en algún aspecto específico?';
+    }
+
+    // Dudas entre opciones
+    if (lowerMessage.contains('dudo') ||
+        lowerMessage.contains('no sé') ||
+        lowerMessage.contains('no se') ||
+        lowerMessage.contains('entre')) {
+      return '🤔 Cuando dudes entre opciones:\n\n**Estrategia de descarte:**\n\n1. **Elimina las claramente falsas**: A veces hay opciones absurdas\n2. **Busca palabras absolutas**: "Siempre", "nunca", "todos" → sospechosas\n3. **Identifica contradicciones**: ¿Hay opciones que se contradicen?\n4. **Confía en tu primera impresión**: Si estudiaste, tu intuición importa\n5. **Lee bien el enunciado**: ¿Qué pregunta EXACTAMENTE?\n\n⚡ **Si quedan dos opciones**: La que sea más específica y precisa suele ser correcta.\n\n¿Quieres que analicemos juntos las opciones?';
+    }
+
+    // Conceptos generales de Guardia Civil
+    if (lowerMessage.contains('guardia civil') ||
+        lowerMessage.contains('cuerpo') ||
+        lowerMessage.contains('instituto armado')) {
+      return '🇪🇸 Sobre la Guardia Civil:\n\nConceptos importantes:\n\n**Naturaleza jurídica**: Instituto armado de naturaleza militar\n**Dependencia**: Ministerio del Interior (funcionamiento ordinario)\n**Misiones principales**:\n• Seguridad ciudadana\n• Tráfico y seguridad vial\n• Protección de la naturaleza\n• Policía judicial\n• Misiones internacionales\n\n📋 **Normativa clave**:\n- Ley Orgánica 2/1986\n- Ley 29/2014 de Régimen del Personal\n\n¿Necesitas información sobre algún aspecto concreto del Cuerpo?';
+    }
+
+    // Constitución
+    if (lowerMessage.contains('constitución') ||
+        lowerMessage.contains('constitucion') ||
+        lowerMessage.contains('derechos fundamentales')) {
+      return '📜 Sobre la Constitución:\n\n**Estructura básica:**\n\n• **Título Preliminar**: Principios fundamentales\n• **Título I**: Derechos y deberes fundamentales (arts. 10-55)\n• **Títulos II-IX**: Organización del Estado\n• **Disposiciones adicionales y transitorias**\n\n🔑 **Conceptos clave:**\n- Derechos fundamentales (arts. 15-29): Máxima protección\n- Derechos ciudadanos (arts. 30-38): Protección ordinaria  \n- Principios rectores (arts. 39-52): Orientan legislación\n\n💡 Para las oposiciones, céntrate especialmente en el Título I.\n\n¿Qué artículo o derecho te genera dudas?';
+    }
+
+    // Agradecimientos
+    if (lowerMessage.contains('gracias') ||
+        lowerMessage.contains('vale') ||
+        lowerMessage.contains('ok') ||
+        lowerMessage.contains('entendido')) {
+      return '¡De nada! 😊 Me alegro de haberte ayudado.\n\nRecuerda:\n• La práctica constante es clave\n• Revisa tus errores para aprender\n• Descansa bien antes del examen\n\n¿Hay algo más en lo que pueda ayudarte con esta pregunta?';
+    }
+
+    // Ánimos
+    if (lowerMessage.contains('difícil') ||
+        lowerMessage.contains('dificil') ||
+        lowerMessage.contains('complicado') ||
+        lowerMessage.contains('no puedo')) {
+      return '💪 ¡No te desanimes!\n\nTodas las preguntas son complejas al principio, pero:\n\n✨ **Recuerda**: Cada pregunta que practicas es una que dominarás en el examen\n🎯 **Estrategia**: Divide la pregunta en partes más pequeñas\n📚 **Aprendizaje**: Los errores son oportunidades de mejora\n⏰ **Tiempo**: Con práctica, irás más rápido y seguro\n\n¡Tú puedes con esto y mucho más! El hecho de estar practicando ya te pone muy por delante.\n\n¿Vamos paso a paso con esta pregunta?';
+    }
+
+    // Respuesta por defecto más elaborada
+    return '🤖 Entiendo tu pregunta.\n\nPara ayudarte mejor, podrías especificarme:\n\n• ¿Qué parte específica no entiendes?\n• ¿Es un término, un concepto o el razonamiento completo?\n• ¿Has identificado alguna opción que puedas descartar?\n• ¿Hay alguna palabra clave que te confunda?\n\nCuanto más específico seas, mejor podré orientarte. Estoy aquí para ayudarte a razonar, no solo a memorizar. 😊';
+  }
+
+  /// Limpia el historial de mensajes
+  void clearMessages() {
+    emit(const AiChatState());
+  }
+
+  /// Elimina el mensaje de error
+  void clearError() {
+    emit(state.copyWith(hasError: false, errorMessage: null));
+  }
+}

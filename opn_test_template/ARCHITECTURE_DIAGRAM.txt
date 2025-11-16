@@ -1,0 +1,404 @@
+================================================================================
+                    FLUTTER TEST/QUESTION SYSTEM ARCHITECTURE
+================================================================================
+
+NAVIGATION & ROUTING
+────────────────────────────────────────────────────────────────────────────
+HomePage → TopicTestPage → ResultSummarySheet
+  (home)     (topic-test)      (Modal Dialog)
+              ↓
+        [Test Taking UI]
+              ↓
+         (Finalizar button)
+              ↓
+      FinishConfirmationSheet
+         (Modal Dialog)
+
+================================================================================
+                              COMPONENT HIERARCHY
+================================================================================
+
+TopicTestPage (StatefulWidget - Main Container)
+│
+├─ _TestHeader (AppBar)
+│  ├─ Title: Topic Name
+│  ├─ Progress: "5/20"
+│  └─ Timer: "MM:SS" (updated every 1 second)
+│
+├─ PageView (Question Container)
+│  ├─ Regular Mode: _QuestionPage (Multiple pages)
+│  │  ├─ Question text
+│  │  ├─ Question image (conditional)
+│  │  └─ _OptionTile widgets (A, B, C, D options)
+│  │     ├─ Selected state styling
+│  │     ├─ Correct/Incorrect indicators (post-test)
+│  │     └─ Tap handler
+│  │
+│  └─ Flashcard Mode: FlashcardView (Multiple pages)
+│     ├─ _CardFront (Front side with animation)
+│     ├─ _CardBack (Back side with animation)
+│     └─ _DifficultyButtons (4-button difficulty selector)
+│        ├─ "Otra vez" (red) - Review in <1 day
+│        ├─ "Difícil" (orange) - Review in 1-2 days
+│        ├─ "Bien" (green) - Review in 3-6 days
+│        └─ "Fácil" (blue) - Review in 7+ days
+│
+├─ NavigationControls (Bottom Navigation Bar)
+│  ├─ Previous button (disabled if first question)
+│  ├─ Finalizar/Ver resultados button
+│  └─ Next button (disabled if last question)
+│
+├─ QuestionActionsBar (Below NavigationControls)
+│  ├─ Favorite toggle (star icon)
+│  ├─ Report button (challenge/impugnar)
+│  ├─ AI Chat button (placeholder)
+│  └─ Share button (copy to clipboard)
+│
+└─ Dialogs (Modal Bottom Sheets)
+   ├─ FinishConfirmationSheet
+   │  ├─ Confirmation message
+   │  ├─ "Continuar revisando" button
+   │  └─ "Finalizar" button
+   │
+   ├─ ResultSummarySheet
+   │  ├─ Score circle display
+   │  ├─ Stats tiles (Correct/Incorrect/Blank)
+   │  ├─ "Continuar revisando" button
+   │  ├─ "Ver Tips" button
+   │  └─ "Salir del test" button
+   │
+   └─ Tips Dialog (if hasTips = true)
+      └─ List of tips from questions
+
+================================================================================
+                              STATE MANAGEMENT
+================================================================================
+
+QuestionCubit (Bloc Pattern)
+│
+├─ State: QuestionState (Freezed)
+│  ├─ questions: List<Question>
+│  ├─ questionOptions: List<QuestionOption>
+│  ├─ selectedTopicId: int?
+│  ├─ selectedQuestionId: int?
+│  ├─ answerDisplayMode: AnswerDisplayMode
+│  ├─ fetchQuestionsStatus: Status (loading/done/error)
+│  ├─ fetchQuestionOptionsStatus: Status
+│  └─ error: String?
+│
+├─ Methods: Scoring Functions
+│  ├─ calculateBlankAnswers(totalQuestions, answered) → int
+│  ├─ calculateRawScore(correct, incorrect, penalty) → double
+│  ├─ calculateFinalScore(correct, incorrect, total, penalty) → double
+│  └─ calculateSuccessRate(correct, total) → double
+│
+└─ Methods: Data Loading
+   ├─ selectTopic(topicId)
+   ├─ fetchQuestions(topicId?, academyId?)
+   ├─ fetchAllQuestionOptionsByTopic(topicId)
+   └─ loadQuestionsDirectly(questions, options)
+
+Additional Cubits:
+├─ HistoryCubit → Test results storage
+├─ FavoriteCubit → Favorite question management
+└─ AuthCubit → User authentication
+
+================================================================================
+                              TIMER MECHANISM
+================================================================================
+
+Timer Lifecycle:
+┌─────────────────────────────────────────────────────────────┐
+│ 1. _prepare() → _startTimer(minutes)                        │
+│    ├─ Duration initialized from Topic.durationMinutes       │
+│    └─ Timer.periodic starts with 1-second interval          │
+│                                                              │
+│ 2. Every 1 second:                                          │
+│    ├─ Decrement _remaining by 1 second                      │
+│    ├─ Call setState() to update UI                          │
+│    └─ Display in AppBar as "MM:SS"                          │
+│                                                              │
+│ 3. When time expires:                                       │
+│    ├─ Set _remaining to Duration.zero                       │
+│    ├─ Cancel timer                                          │
+│    └─ Auto-submit test (optional feature)                   │
+│                                                              │
+│ 4. On page dispose:                                         │
+│    └─ Cancel timer to prevent memory leaks                  │
+└─────────────────────────────────────────────────────────────┘
+
+Time Tracking Per Question:
+│
+├─ When user moves to new question:
+│  ├─ _recordQuestionDurationForIndex(previousIndex)
+│  ├─ Calculate elapsed time = now - _questionStartTime
+│  └─ Add to _questionDurationsSeconds[questionId]
+│
+└─ When test finishes:
+   └─ Include time_taken_seconds in UserTestAnswer
+
+================================================================================
+                        TEST FINALIZATION FLOW
+================================================================================
+
+_finishTest() Method Flow:
+┌──────────────────────────────────────────────────────────────┐
+│ STEP 1: Show Confirmation Dialog                            │
+│ ├─ User confirms → Continue                                 │
+│ └─ User cancels → Return (abort finalization)               │
+│                                                              │
+│ STEP 2: Record Current Question Duration                    │
+│ └─ _recordQuestionDurationForIndex(_currentIndex)           │
+│                                                              │
+│ STEP 3: Calculate Results                                   │
+│ ├─ Count correct answers                                    │
+│ ├─ Count incorrect answers                                  │
+│ ├─ Calculate blank = total - answered                       │
+│ ├─ rawScore = correct - (incorrect * penalty)               │
+│ ├─ finalScore = (rawScore / total) * 10                     │
+│ └─ successRate = (correct / total) * 100                    │
+│                                                              │
+│ STEP 4: Build Answer Records                                │
+│ └─ For each question:                                       │
+│    ├─ question_id                                           │
+│    ├─ selected_option_id                                    │
+│    ├─ correct (boolean)                                     │
+│    ├─ time_taken_seconds                                    │
+│    ├─ question_order (1-indexed)                            │
+│    ├─ difficulty_rating (flashcard only)                    │
+│    └─ challenge_by_tutor                                    │
+│                                                              │
+│ STEP 5: Save to Database                                    │
+│ ├─ createUserTest(initialUserTest)                          │
+│ ├─ insertUserTestAnswers(answerList)                        │
+│ └─ updateUserTest(userTestId, completedTest)                │
+│                                                              │
+│ STEP 6: Update UI State                                     │
+│ ├─ _testFinished = true                                     │
+│ ├─ _resultsSaved = true                                     │
+│ ├─ _tipsUnlocked = true                                     │
+│ └─ Save all result values (_savedCorrect, etc.)             │
+│                                                              │
+│ STEP 7: Show Results Dialog                                 │
+│ └─ _presentSummary() → ResultSummarySheet                   │
+│                                                              │
+│ STEP 8: Handle User Actions                                 │
+│ ├─ Continue Review → Stay in review mode                    │
+│ ├─ View Tips → Show tips dialog                             │
+│ └─ Exit → Pop to previous screen                            │
+└──────────────────────────────────────────────────────────────┘
+
+================================================================================
+                        RESULTS DIALOG DISPLAY
+================================================================================
+
+Regular Test Mode Results:
+┌────────────────────────────────────────┐
+│  Resultado del test                    │
+├────────────────────────────────────────┤
+│                                        │
+│     Score Display:                     │
+│     ┌──────────────────────────┐      │
+│     │         10.00            │      │
+│     │  (Primary circle score)  │      │
+│     └──────────────────────────┘      │
+│                                        │
+│     (Optional) Average:                │
+│     ┌──────────────────────────┐      │
+│     │     Promedio: 9.50       │      │
+│     │  (Second circle - mocks) │      │
+│     └──────────────────────────┘      │
+│                                        │
+│     Statistics Tiles:                  │
+│     ┌─────┬─────────┬──────────┐      │
+│     │Corr │Incorrect│En blanco │      │
+│     │ 15  │   2     │    3     │      │
+│     └─────┴─────────┴──────────┘      │
+│                                        │
+│     Action Buttons:                    │
+│     [✓ Continue Review]                │
+│     [✓ View Tips]                      │
+│     [✗ Exit Test]                      │
+└────────────────────────────────────────┘
+
+Flashcard Mode Results:
+┌────────────────────────────────────────┐
+│  Resumen de flashcards                 │
+├────────────────────────────────────────┤
+│                                        │
+│  Reviewed 18 of 20 cards               │
+│                                        │
+│  ┌──────┐  ┌──────┐  ┌──────┐         │
+│  │Again │  │Hard  │  │Medium│         │
+│  │2(10%)│  │3(15%)│  │7(35%)│         │
+│  └──────┘  └──────┘  └──────┘         │
+│                                        │
+│  ┌──────┐                              │
+│  │ Easy │                              │
+│  │6(30%)│                              │
+│  └──────┘                              │
+│                                        │
+│  2 cards pending difficulty rating     │
+│                                        │
+│  [✓ Continue Review]                   │
+│  [✗ Exit Test]                         │
+└────────────────────────────────────────┘
+
+================================================================================
+                          DATA MODELS (Simplified)
+================================================================================
+
+Question
+├─ id: int
+├─ question: String (question text)
+├─ topic: int (foreign key)
+├─ tip: String? (feedback)
+├─ article: String? (reference)
+├─ questionImageUrl: String
+├─ retroImageUrl: String
+├─ retroAudioText: String
+├─ retroAudioEnable: bool
+└─ order: int (question sequence)
+
+QuestionOption
+├─ id: int
+├─ questionId: int (foreign key)
+├─ answer: String (option text)
+├─ isCorrect: bool
+└─ optionOrder: int (A=1, B=2, C=3, D=4)
+
+UserTest (Test Results)
+├─ id: int
+├─ userId: int
+├─ topicIds: List<int>
+├─ questionCount: int (total questions)
+├─ rightQuestions: int (correct count)
+├─ wrongQuestions: int (incorrect count)
+├─ totalAnswered: int (answered count)
+├─ score: double (0-10 scale)
+├─ successRate: double (percentage)
+├─ finalized: bool
+├─ isFlashcardMode: bool
+└─ createdAt: DateTime
+
+UserTestAnswer
+├─ userTestId: int (foreign key)
+├─ questionId: int (foreign key)
+├─ selectedOptionId: int? (chosen option)
+├─ correct: bool? (was it correct?)
+├─ timeTakenSeconds: int?
+├─ questionOrder: int
+└─ difficultyRating: String? ('again', 'hard', 'medium', 'easy')
+
+Topic
+├─ id: int
+├─ topicName: String
+├─ topicTypeId: int
+├─ durationMinutes: int (timer)
+├─ isPremium: bool
+├─ options: int (number of choices)
+└─ averageScore: double
+
+TopicType
+├─ id: int
+├─ name: String ('Test', 'Flashcard', etc.)
+├─ isTest: bool
+├─ isFlashcards: bool
+├─ level: TopicLevel (enum)
+└─ penalty: double (per wrong answer)
+
+================================================================================
+                          SPECIAL FEATURES
+================================================================================
+
+Flashcard Mode:
+┌─────────────────────────────────────────┐
+│ Activation: TopicLevel.Flashcard        │
+├─────────────────────────────────────────┤
+│                                         │
+│ Features:                               │
+│ ├─ Flip animation (front ↔ back)       │
+│ ├─ Difficulty selection after flip     │
+│ ├─ Auto-advance to next card           │
+│ ├─ Prevents forward without rating     │
+│ └─ Tracks difficulty statistics        │
+│                                         │
+│ Difficulty Ratings:                     │
+│ ├─ "again" (Red) - Review <1 day       │
+│ ├─ "hard" (Orange) - Review 1-2 days   │
+│ ├─ "medium" (Green) - Review 3-6 days  │
+│ └─ "easy" (Blue) - Review 7+ days      │
+└─────────────────────────────────────────┘
+
+History Review Mode:
+┌─────────────────────────────────────────┐
+│ Activation: isHistoryReview = true      │
+├─────────────────────────────────────────┤
+│                                         │
+│ Features:                               │
+│ ├─ Disables timer (no countdown)       │
+│ ├─ Pre-loads user's answers            │
+│ ├─ Shows correct answers immediately   │
+│ ├─ Allows reviewing submitted test     │
+│ └─ Tips unlocked from start             │
+└─────────────────────────────────────────┘
+
+Tips System:
+┌─────────────────────────────────────────┐
+│ Visibility: Unlocked after test ends    │
+├─────────────────────────────────────────┤
+│                                         │
+│ Features:                               │
+│ ├─ Source: Question.tip field           │
+│ ├─ Display: Modal bottom sheet          │
+│ ├─ Condition: Only if tips exist        │
+│ └─ Contains: Tips from all questions    │
+└─────────────────────────────────────────┘
+
+================================================================================
+                          KEY FILE LOCATIONS
+================================================================================
+
+Core Files:
+├─ lib/app/features/questions/view/topic_test_page.dart (1,717 lines)
+│  └─ Main container, timer, finalization logic
+│
+├─ lib/app/features/questions/cubit/cubit.dart (369 lines)
+│  └─ State management, scoring calculations
+│
+├─ lib/app/features/questions/cubit/state.dart (84 lines)
+│  └─ State definition (Freezed)
+│
+├─ lib/app/features/questions/repository/repository.dart (188 lines)
+│  └─ Database access (Supabase)
+│
+Components:
+├─ lib/app/features/questions/view/components/result_summary_sheet.dart (474)
+│  └─ Results dialog display
+│
+├─ lib/app/features/questions/view/components/finish_confirmation_sheet.dart (76)
+│  └─ Finalization confirmation
+│
+├─ lib/app/features/questions/view/components/flashcard_view.dart (512)
+│  └─ Flashcard study mode
+│
+├─ lib/app/features/questions/view/components/navigation_controls.dart (204)
+│  └─ Bottom navigation bar
+│
+├─ lib/app/features/questions/view/components/question_index_page.dart (150+)
+│  └─ Question overview/index
+│
+├─ lib/app/features/questions/view/components/after_finish_retro.dart (150)
+│  └─ Feedback display after test
+│
+Models:
+├─ lib/app/features/questions/model/question_model.dart
+│  └─ Question data structure
+│
+├─ lib/app/features/questions/model/question_option_model.dart
+│  └─ Question option data structure
+│
+└─ lib/app/features/questions/model/user_test_answer_model.dart
+   └─ Test answer data structure
+
+================================================================================

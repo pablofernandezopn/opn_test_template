@@ -1,0 +1,50 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.isyfu.opnTestGuardiaCivil",
+        "paths": [
+          "/home",
+          "/welcome",
+          "/onboarding",
+          "/loading",
+          "/topic-test/*",
+          "/preview-topic/*",
+          "/preview-topic-group/*",
+          "/test-config",
+          "/test",
+          "/survival-test",
+          "/pomodoro",
+          "/history",
+          "/history-test-review",
+          "/history-final-test-review",
+          "/favorites",
+          "/favorite-question",
+          "/challenges",
+          "/challenge-detail/*",
+          "/ranking/*",
+          "/group-ranking/*",
+          "/opn-ranking",
+          "/stats",
+          "/ai-chat",
+          "/login",
+          "/signin",
+          "/register",
+          "/signup",
+          "/forgot-password",
+          "/success",
+          "/profile",
+          "/settings",
+          "/chat-settings",
+          "/*"
+        ],
+        "components": [
+          {
+            "/": "/*"
+          }
+        ]
+      }
+    ]
+  }
+}

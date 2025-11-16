@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>OPN Test Template</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>opn_test_template</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>mailto</string>
+      <string>https</string>
+      <string>http</string>
+    </array>
+
+	<!-- ================================ -->
+	<!-- PERMISOS DE PRIVACIDAD -->
+	<!-- ================================ -->
+
+	<!-- Permiso para usar la cámara -->
+	<key>NSCameraUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la cámara para que puedas tomar fotos de perfil y subirlas.</string>
+
+	<!-- Permiso para leer la galería de fotos -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta aplicación necesita acceso a tu galería de fotos para que puedas seleccionar imágenes de perfil.</string>
+
+	<!-- Permiso para guardar fotos en la galería -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Esta aplicación necesita permisos para guardar las fotos que tomes en tu galería.</string>
+
+	<!-- Permiso para Face ID / Touch ID -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>La aplicación permite el acceso mediante autenticación biométrica para mayor seguridad.</string>
+
+	<!-- Permiso para notificaciones -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Esta aplicación necesita permisos para enviarte notificaciones sobre nuevos tests, recordatorios de estudio y resultados importantes.</string>
+
+	<!-- Modos de background para notificaciones y procesamiento -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>fetch</string>
+	</array>
+
+	<!-- Configuración de App Transport Security (permitir conexiones seguras) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+
+	<!-- ================================ -->
+	<!-- DEEP LINKS - Esquema personalizado -->
+	<!-- ================================ -->
+	<!-- ⚠️ TEMPLATE: Configurar por flavor en Info.plist específico -->
+	<!-- Ejemplo: Permite abrir la app con URLs como: yourscheme://home -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.isyfu.opn.template</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>opnapp</string>
+			</array>
+		</dict>
+	</array>
+
+</dict>
+</plist>

@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "OPN Test Guardia Civil",
+    "organizationName": "Oposiciones Guardia Civil",
+    "domain": "oposicionesguardiacivil.online",
+    "website": "www.oposicionesguardiacivil.online",
+    "supportEmail": "hola@oposicionesguardiacivil.online",
+    "termsUrl": "https://oposicionesguardiacivil.online/aviso-legal/",
+    "privacyUrl": "https://oposicionesguardiacivil.online/politica-privacidad/"
+  },
+  "identifiers": {
+    "packageName": "com.isyfu.opn.guardiacivil",
+    "bundleId": "com.isyfu.opn.guardiacivil"
+  },
+  "deepLinks": {
+    "scheme": "opngc",
+    "domain": "oposicionesguardiacivil.online"
+  },
+  "branding": {
+    "logoPath": "flavors/guardia_civil/assets/images/logo.png",
+    "colors": {
+      "primary": "#018b5e",
+      "primaryLight": "#00B87C",
+      "primaryDark": "#004D3D",
+      "primaryContainer": "#E8F5F1",
+      "secondary": "#FFD15C",
+      "secondaryContainer": "#FFF8E7",
+      "accent": "#FFD15C",
+      "tertiaryContainer": "#FFF8E7",
+      "background": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "error": "#FF4949",
+      "success": "#018b5e",
+      "warning": "#FFD15C"
+    }
+  },
+  "services": {
+    "supabase": {
+      "url": "https://toraglnkbwgufwmyauvp.supabase.co",
+      "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvcmFnbG5rYndndWZ3bXlhdXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NjY3MDc0MzEsImV4cCI6MTk4MjI4MzQzMX0._CHEagqw4yN0RCUd5grlZ5I5dO6rRjDMcM_eskznrGM"
+    },
+    "firebase": {
+      "projectId": "opn-guardia-civil",
+      "appIdAndroid": "1:123456789:android:abc123",
+      "appIdIos": "1:123456789:ios:abc123"
+    },
+    "revenueCat": {
+      "apiKeyAndroid": "rc_android_key_guardia_civil",
+      "apiKeyIos": "rc_ios_key_guardia_civil"
+    }
+  },
+  "texts": {
+    "disclaimer": "Descargo de responsabilidad: Esta aplicación es una herramienta de estudio independiente y no representa a ninguna entidad gubernamental ni está afiliada con la Guardia Civil. Toda la información y el temario proporcionados se basan en fuentes públicas oficiales, como el Boletín Oficial del Estado (BOE) y las convocatorias oficiales del Ministerio del Interior.",
+    "welcomeSubtitle": "Consigue tu apto para la Guardia Civil",
+    "signInInfo": "Tus datos de acceso son los mismos que en www.oposicionesguardiacivil.online"
+  }
+}
