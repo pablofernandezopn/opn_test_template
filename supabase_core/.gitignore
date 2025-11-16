@@ -1,14 +1,25 @@
-# Environment variables
+# Supabase
+.branches
+.temp
+.vscode
+
+# Configuraciones con secrets (NO COMMITEAR)
+project-configs/*.env
+!project-configs/.env.example
+project-configs/*.secrets
+!project-configs/.secrets.example
+
+# Variables de entorno locales
 .env
 .env.local
+!.env.local.example
 
-# IDE
-.idea/
-.vscode/
+# Node
+node_modules/
 
 # Logs
 *.log
 
-# OS
+# Sistema
 .DS_Store
-Thumbs.db
+.idea/

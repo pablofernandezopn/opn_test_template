@@ -38,3 +38,36 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Supabase
+**/migration_policia_nacional/
+**/migration_guardia_civil/
+**/.temp/
+**/.branches/
+**/supabase/.temp/
+**/supabase/.branches/
+
+# Data Science / CSV / Excel files grandes
+**/data_science/**/*.csv
+**/data_science/**/*.xlsx
+**/data_science/**/*.xls
+**/data_science/.venv/
+**/data_science/__pycache__/
+**/.venv/
+**/__pycache__/
+
+# Flutter build files
+**/.dart_tool/
+**/build/
+**/*.dill
+**/*.dSYM/
+**/DerivedData/
+**/.gradle/
+**/ios/Pods/
+**/android/.gradle/
+
+# Python
+*.pyc
+venv/
+.venv/
+*.egg-info/

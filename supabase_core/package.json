@@ -1,0 +1,33 @@
+{
+  "name": "supabase-core",
+  "version": "1.0.0",
+  "description": "Migraciones y Edge Functions compartidas para múltiples proyectos Supabase",
+  "scripts": {
+    "setup": "./scripts/setup.sh",
+    "dev": "./scripts/dev-start.sh",
+    "dev:policia": "./scripts/dev-start.sh policia_nacional",
+    "dev:guardia": "./scripts/dev-start.sh guardia_civil",
+    "dev:switch": "./scripts/dev-switch.sh",
+    "dev:stop": "supabase stop",
+    "dev:reset": "supabase db reset",
+    "dev:studio": "echo 'Studio: http://127.0.0.1:54323'",
+    "dev:status": "supabase status",
+    "secrets:policia": "./scripts/setup-secrets.sh policia_nacional",
+    "secrets:guardia": "./scripts/setup-secrets.sh guardia_civil",
+    "deploy:policia": "./scripts/deploy.sh policia_nacional",
+    "deploy:guardia": "./scripts/deploy.sh guardia_civil",
+    "deploy:all": "./scripts/deploy-all.sh",
+    "migrate:policia": "./scripts/deploy-migrations.sh policia_nacional",
+    "migrate:guardia": "./scripts/deploy-migrations.sh guardia_civil",
+    "functions:policia": "./scripts/deploy-functions.sh policia_nacional",
+    "functions:guardia": "./scripts/deploy-functions.sh guardia_civil",
+    "db:diff:policia": "./scripts/db-diff.sh policia_nacional",
+    "db:diff:guardia": "./scripts/db-diff.sh guardia_civil",
+    "db:reset:policia": "supabase link --project-ref $(grep PROJECT_REF project-configs/policia_nacional.env | cut -d'=' -f2 | tr -d '\"') && supabase db reset",
+    "db:reset:guardia": "supabase link --project-ref $(grep PROJECT_REF project-configs/guardia_civil.env | cut -d'=' -f2 | tr -d '\"') && supabase db reset",
+    "new:migration": "supabase migration new"
+  },
+  "keywords": ["supabase", "migrations", "edge-functions"],
+  "author": "",
+  "license": "ISC"
+}
