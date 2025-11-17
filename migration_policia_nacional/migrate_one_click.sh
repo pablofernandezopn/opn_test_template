@@ -7,7 +7,10 @@
 #
 # USO:
 #   ./migrate_one_click.sh                    # Migración completa
-#   SKIP_DOWNLOAD=true ./migrate_one_click.sh # Reusar datos ya descargados
+#
+#
+#
+# Reusar datos ya descargados
 #
 # DESCRIPCIÓN:
 #   1. Extrae datos de Supabase REMOTA (producción)
@@ -31,9 +34,10 @@ NC='\033[0m' # No Color
 
 # Rutas
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="/Users/pablofernandezlucas/Documents/Isyfu/opn_test_policia_nacional"
-NEW_DB_DIR="$BASE_DIR/nueva_app"
-MIGRATION_DIR="$NEW_DB_DIR/supabase/migration_policia_nacional"
+# Usar el directorio del script como base
+MIGRATION_DIR="$SCRIPT_DIR"
+# Buscar el directorio de nueva_app subiendo en la jerarquía
+NEW_DB_DIR="$(dirname "$SCRIPT_DIR")/policia_nacional/supabase"
 
 # Configuración
 SKIP_DOWNLOAD=${SKIP_DOWNLOAD:-false}
